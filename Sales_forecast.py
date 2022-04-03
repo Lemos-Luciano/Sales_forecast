@@ -64,14 +64,21 @@ store_info_df.describe()
 sns.heatmap(store_info_df.isnull(),yticklabels=False, cbar=False, cmap= "Blues" )
 #plt.show()
 
-store_info_df[store_info_df['CompetitionDistance'].isnull()]
+store_info_df[store_info_df['CompetitionDistance'].isnull()] #
 store_info_df[store_info_df['CompetitionOpenSinceMonth'].isnull()]
 store_info_df[store_info_df["Promo2"] == 0] #"Promo2SinceWeek; Promo2SinceYear; PromoInterval" are Na since there was never a promotion in the store
 
 
+#There are several Na values, it is important to perform data cleaning. As a large part of the DataSet is null data, deleting the data is not an option, taking the average would not make sense (all the competitors opened on an average date? Quack!)
+#So I'll replace it with 0
+#CompetitionDistance does not make sense to replace it with the value 0 since we would be talking about ourselves. So we will put an average of the rest
+str_cols = ("Promo2SinceWeek", "Promo2SinceYear", "PromoInterval", "CompetitionOpenSinceMonth",	"CompetitionOpenSinceYear")
+for str in str_cols:
+  store_info_df[str].fillna(0, inplace = True)  #fillna => replace na values with the assigned value #inplace => does the substitution in memory and we should not create another variable
 
+store_info_df['CompetitionDistance'].fillna(store_info_df['CompetitionDistance'].mean(), inplace = True) 
 
-
-
-
+sns.heatmap(store_info_df.isnull(),yticklabels=False, cbar=False, cmap= "Blues" )
+plt.show()
+store_info_df[store_info_df['Store'] == 291] #store 219 with clean data, well done!
 
