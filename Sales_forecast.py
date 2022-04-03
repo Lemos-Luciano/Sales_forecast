@@ -110,3 +110,51 @@ sales_train_all_df['Year'] = pd.DatetimeIndex(sales_train_all_df['Date']).year
 sales_train_all_df['Month'] = pd.DatetimeIndex(sales_train_all_df['Date']).month
 sales_train_all_df['Day'] = pd.DatetimeIndex(sales_train_all_df['Date']).day
 sales_train_all_df
+
+
+
+        ###----------    4) GRAPHICAL ANALYSIS OF THE COMBINED DATASET     ----------###
+
+#we can see how sales are low in January and February, then increase but go down again in summer. Finally, at the holidays and Black Friday at the end of the year, it is where the largest number of sales is found.
+axis = sales_train_all_df.groupby('Month')[['Sales']].mean().plot(figsize = (10, 5), marker = 'o', color = 'r')
+axis.set_title('Average Sale per Month')
+axis = sales_train_all_df.groupby('Month')[['Customers']].mean().plot(figsize = (10, 5), marker = '^', color = 'b')
+axis.set_title('Average customers per Month')
+
+#At the beginning and end of the month there are more sales, the 12th and 24th are the lowest
+axis = sales_train_all_df.groupby('Day')[['Sales']].mean().plot(figsize = (10, 5), marker = 'o', color = 'r')
+axis.set_title('Average sale per day')
+axis = sales_train_all_df.groupby('Day')[['Customers']].mean().plot(figsize = (10, 5), marker = '^', color = 'b')
+axis.set_title('Average customers per day')
+
+#(1= Monday, 7=Sunday)
+#I saw something strange, the number of customers on Monday is lower than on Sunday, however they have the same sales. Clearly the day with the most sales is Sunday and Saturday the lowest
+axis = sales_train_all_df.groupby('DayOfWeek')[['Sales']].mean().plot(figsize = (10, 5), marker = 'o', color = 'r')
+axis.set_title('Average sales per day of the week')
+axis = sales_train_all_df.groupby('DayOfWeek')[['Customers']].mean().plot(figsize = (10, 5), marker = '^', color = 'b')
+axis.set_title('Average Customers per day of the week')
+#plt.show()
+
+
+#Plot the sales according to the type of store and we can see that the type "B" store is the most profitable
+fig, ax = plt.subplots(figsize = (20, 10))
+sales_train_all_df.groupby(['Date','StoreType']).mean()['Sales'].unstack().plot(ax = ax)
+#plt.show()
+
+
+#We observe there is an increase in the number of customers and sales when the promotion exists
+#Blue bar (0) = there is no promo, Orange bar (1) = There is a promo
+plt.figure(figsize=[15, 10]) 
+plt.subplot(211) 
+sns.barplot(x = 'Promo', y = 'Sales', data = sales_train_all_df) 
+plt.subplot(212) 
+sns.barplot(x = 'Promo', y = 'Customers', data = sales_train_all_df) 
+
+
+#In the violin graph you can see how when there is a promo there is a big difference in customers (the queue above), however there is not a big difference in sales
+plt.figure(figsize=[15, 10]) 
+plt.subplot(211)
+sns.violinplot(x = 'Promo', y = 'Sales', data = sales_train_all_df) 
+plt.subplot(212)
+sns.violinplot(x = 'Promo', y = 'Customers', data = sales_train_all_df) 
+plt.show()
