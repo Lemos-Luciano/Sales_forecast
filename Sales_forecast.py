@@ -2,6 +2,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import datetime
 
 
 url_sales = "https://raw.githubusercontent.com/Lemos-Luciano/Sales_forecast/main/Dataset_Sales.csv"
@@ -79,6 +80,33 @@ for str in str_cols:
 store_info_df['CompetitionDistance'].fillna(store_info_df['CompetitionDistance'].mean(), inplace = True) 
 
 sns.heatmap(store_info_df.isnull(),yticklabels=False, cbar=False, cmap= "Blues" )
-plt.show()
+#plt.show()
 store_info_df[store_info_df['Store'] == 291] #store 219 with clean data, well done!
 
+
+
+
+
+        ###----------    3)  DATASET COBINATION     ----------###
+
+sales_train_all_df = pd.merge(sales_train_df, store_info_df, how = 'inner', on = 'Store') #Both datasets share the 'store' column
+
+sales_train_all_df.to_csv('CombinedDataset', index = False) #I save the new combined dataset
+sales_train_all_df
+
+#I correlate the data with sales since we want to know the effect it has on them
+#We can see that sales have a high correlation with customers and the promo of the day, however, the more you increase the Promo2 (periodic promotions) decreases our amount of sales
+correlations = sales_train_all_df.corr()['Sales'].sort_values() ##sort_values => will sort the data
+correlations
+
+correlations = sales_train_all_df.corr()
+f, ax = plt.subplots(figsize = (20,20))
+sns.heatmap(correlations, annot=True)
+#plt.show()
+
+
+##Our dataset in the Date column has all the data together (years, month and day), this is not the case with the store data, where the dates of the competitors are separated by year and month. I will create new columns from the Date column to separate date month and year
+sales_train_all_df['Year'] = pd.DatetimeIndex(sales_train_all_df['Date']).year
+sales_train_all_df['Month'] = pd.DatetimeIndex(sales_train_all_df['Date']).month
+sales_train_all_df['Day'] = pd.DatetimeIndex(sales_train_all_df['Date']).day
+sales_train_all_df
