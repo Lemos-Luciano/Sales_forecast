@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import datetime
+import numpy as np
 from fbprophet import Prophet
 
 
@@ -60,18 +61,44 @@ sales_train_all_df['Day'] = pd.DatetimeIndex(sales_train_all_df['Date']).day
 
 
 
-def sales_predictions (Store_ID, sales_df, periods):
+def sales_predictions (Store_ID, sales_df, holidays, periods):
   sales_df = sales_df[sales_df['Store'] == Store_ID] #I want it to only analyze the data of the chosen store and not the entire dataset
   sales_df = sales_df[['Date', 'Sales']].rename(columns = {'Date' : 'ds', 'Sales' : 'y'}) #we must rename the date and sales column to the format requested by facebookprhopet (date has to be ds and sales has to be y) two square brackets [[]], the first to select the column and the second to indicate a list
   sales_df = sales_df.sort_values('ds')#sort them by ascending date
 
   #return sales_df   # I used to test
-  model    = Prophet()
+  model    = Prophet(holidays = holidays) #by default holidays comes = none, so we say that now it is equal to the variable added above
   model.fit(sales_df)
   future   = model.make_future_dataframe(periods = periods) 
   forecast = model.predict(future) #forecast is the value/calculation of sales itself
   figure   = model.plot(forecast, xlabel = 'Dates', ylabel = 'Sales')
-  figure2  = model.plot_components(forecast) 
+  figure2  = model.plot_components(forecast)
 
-sales_predictions(10, sales_train_all_df, 60)
+school_holidays = sales_train_all_df[sales_train_all_df['SchoolHoliday'] == 1].loc[:, 'Date'].values #get all dates related to school holidays
+#school_holidays.shape #163,457 observations
+school_holidays = np.unique(school_holidays) #I remove the duplicate data to minimize the load
+#school_holidays.shape #477 observations
+school_holidays = pd.DataFrame({'ds' : pd.to_datetime (school_holidays), 'holiday' : 'School Holiday'})
+
+#I created a dataset with the state holidays that there are 3 holidays. REMEMBER, StateHoliday: Indicates if the day was a holiday or not (a = public holidays, b = Easter holidays, c = Christmas, 0 = It was not a holiday)
+state_holidays = sales_train_all_df[(sales_train_all_df['StateHoliday'] == 'a') | (sales_train_all_df['StateHoliday'] == 'b') | (sales_train_all_df['StateHoliday'] == 'c')].loc[:, 'Date'].values
+#state_holidays.shape #910 observations
+state_holidays = np.unique(state_holidays)
+#state_holidays.shape #35 observations
+state_holidays = pd.DataFrame({'ds' : pd.to_datetime (state_holidays), 'holiday' : 'State Holiday'})
+
+school_state_holidays = pd.concat((school_holidays, state_holidays), axis = 0) #combine the two datasets
+
+# school_holidays
+# state_holidays
+# school_state_holidays 
+
+
+
+      ###----------    4)  EXAMPLES    ----------### 
+#stores number 10 the next 60 days of the dataset
+sales_predictions(10, sales_train_all_df, school_state_holidays, 60)
+
+#stores number 6 the next 90 days of the dataset
+sales_predictions(6, sales_train_all_df, school_state_holidays, 90)
 plt.show()
