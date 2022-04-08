@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import datetime
+from fbprophet import Prophet
 
 
 url_sales = "https://raw.githubusercontent.com/Lemos-Luciano/Sales_forecast/main/Dataset_Sales.csv"
@@ -37,3 +38,40 @@ sales_train_all_df = pd.merge(sales_train_df, store_info_df, how = 'inner', on =
 sales_train_all_df['Year'] = pd.DatetimeIndex(sales_train_all_df['Date']).year
 sales_train_all_df['Month'] = pd.DatetimeIndex(sales_train_all_df['Date']).month
 sales_train_all_df['Day'] = pd.DatetimeIndex(sales_train_all_df['Date']).day
+
+
+     
+      ###----------    4)  MODEL CREATION     ----------### 
+# IMPORTANT!!! => WE WILL USE FBPROPHET IN THE MODEL, SO WE WILL HAVE TO INSTALL IT BEFOREHAND.
+# For fbprophet to work properly we must install Pystan V2.19.1.1 (higher versions are not supported).
+# For Pystan to work normally we must install the C++ compiler and dependencies (numpy and cython. Optional dependencies are: matplotlib, scipy and pandas)
+
+#Guide to install pystan correctly "https://pystan2.readthedocs.io/en/latest/windows.html" => according to the guide for work correctly pystan the previous steps should be done with conda
+# conda update conda #update conda package manager to the latest version
+# conda install libpython m2w64-toolchain -c msys2 #Installing C++ compiler
+# conda install numpy cython -c conda-forge #Installing dependencies
+# conda install matplotlib scipy pandas -c conda-forge #Installing Optional dependencies 
+
+
+#Having many pystan incompatibilities with fbprophet according to their versions, I remove the previous versions and install the appropriate ones without cache
+# pip uninstall fbprophet pystan
+# pip --no-cache-dir install pystan
+# pip --no-cache-dir install fbprophet
+
+
+
+def sales_predictions (Store_ID, sales_df, periods):
+  sales_df = sales_df[sales_df['Store'] == Store_ID] #I want it to only analyze the data of the chosen store and not the entire dataset
+  sales_df = sales_df[['Date', 'Sales']].rename(columns = {'Date' : 'ds', 'Sales' : 'y'}) #we must rename the date and sales column to the format requested by facebookprhopet (date has to be ds and sales has to be y) two square brackets [[]], the first to select the column and the second to indicate a list
+  sales_df = sales_df.sort_values('ds')#sort them by ascending date
+
+  #return sales_df   # I used to test
+  model    = Prophet()
+  model.fit(sales_df)
+  future   = model.make_future_dataframe(periods = periods) 
+  forecast = model.predict(future) #forecast is the value/calculation of sales itself
+  figure   = model.plot(forecast, xlabel = 'Dates', ylabel = 'Sales')
+  figure2  = model.plot_components(forecast) 
+
+sales_predictions(10, sales_train_all_df, 60)
+plt.show()
